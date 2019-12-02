@@ -10,3 +10,9 @@ where
     let input_number: T = input_str.trim().parse()?;
     return Ok(input_number);
 }
+
+pub fn get_string_from_stdio() -> String {
+    let mut input_str = String::new();
+    io::stdin().read_line(&mut input_str).unwrap();
+    return input_str;
+}
