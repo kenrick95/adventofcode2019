@@ -4,6 +4,10 @@ pub enum OpCode {
     Multiply,
     Input,
     Output,
+    JumpIfTrue,
+    JumpIfFalse,
+    LessThan,
+    Equals,
     Halt,
 }
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -73,6 +77,32 @@ pub fn reducer(state: &State, operation: &Operation) -> State {
             let param = get_value(state, program_counter + 1, operation.modes[0]);
             println!("Output: {:?}", param);
         }
+        OpCode::JumpIfTrue => {
+            let param_a = get_value(state, program_counter + 1, operation.modes[0]);
+            let param_b = get_value(state, program_counter + 2, operation.modes[1]);
+            if param_a != 0 {
+                new_state.program_counter = param_b as u32;
+            }
+        }
+        OpCode::JumpIfFalse => {
+            let param_a = get_value(state, program_counter + 1, operation.modes[0]);
+            let param_b = get_value(state, program_counter + 2, operation.modes[1]);
+            if param_a == 0 {
+                new_state.program_counter = param_b as u32;
+            }
+        }
+        OpCode::LessThan => {
+            let param_a = get_value(state, program_counter + 1, operation.modes[0]);
+            let param_b = get_value(state, program_counter + 2, operation.modes[1]);
+            let pos_res = state.positions[(program_counter + 3) as usize];
+            new_state.positions[pos_res as usize] = if param_a < param_b { 1 } else { 0 };
+        }
+        OpCode::Equals => {
+            let param_a = get_value(state, program_counter + 1, operation.modes[0]);
+            let param_b = get_value(state, program_counter + 2, operation.modes[1]);
+            let pos_res = state.positions[(program_counter + 3) as usize];
+            new_state.positions[pos_res as usize] = if param_a == param_b { 1 } else { 0 };
+        }
         OpCode::Halt => {}
     }
     return new_state;
@@ -88,18 +118,40 @@ pub fn get_operation(state: &State) -> Operation {
         parameter_count: 0,
         modes: vec![],
     };
-    if opcode_number == 1 {
-        operation.opcode = OpCode::Add;
-        operation.parameter_count = 3;
-    } else if opcode_number == 2 {
-        operation.opcode = OpCode::Multiply;
-        operation.parameter_count = 3;
-    } else if opcode_number == 3 {
-        operation.opcode = OpCode::Input;
-        operation.parameter_count = 1;
-    } else if opcode_number == 4 {
-        operation.opcode = OpCode::Output;
-        operation.parameter_count = 1;
+    match opcode_number {
+        1 => {
+            operation.opcode = OpCode::Add;
+            operation.parameter_count = 3;
+        }
+        2 => {
+            operation.opcode = OpCode::Multiply;
+            operation.parameter_count = 3;
+        }
+        3 => {
+            operation.opcode = OpCode::Input;
+            operation.parameter_count = 1;
+        }
+        4 => {
+            operation.opcode = OpCode::Output;
+            operation.parameter_count = 1;
+        }
+        5 => {
+            operation.opcode = OpCode::JumpIfTrue;
+            operation.parameter_count = 2;
+        }
+        6 => {
+            operation.opcode = OpCode::JumpIfFalse;
+            operation.parameter_count = 2;
+        }
+        7 => {
+            operation.opcode = OpCode::LessThan;
+            operation.parameter_count = 3;
+        }
+        8 => {
+            operation.opcode = OpCode::Equals;
+            operation.parameter_count = 3;
+        }
+        _ => {}
     }
     // Convert `modes_number` to modes
     for _i in 0..operation.parameter_count {
