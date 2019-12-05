@@ -1,0 +1,144 @@
+#[derive(PartialEq, Debug, Copy, Clone)]
+pub enum OpCode {
+    Add,
+    Multiply,
+    Input,
+    Output,
+    Halt,
+}
+#[derive(PartialEq, Debug, Copy, Clone)]
+pub enum ParameterMode {
+    /**
+     * "position" as reference to address
+     */
+    Position,
+    /**
+     * "position" as value
+     * Parameters that an instruction writes to will never be in immediate mode.
+     */
+    Immediate,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Operation {
+    opcode: OpCode,
+    parameter_count: u32,
+    modes: Vec<ParameterMode>,
+}
+
+#[derive(Debug)]
+pub struct State {
+    pub positions: Vec<i32>,
+    pub program_counter: u32,
+}
+
+pub fn get_value(state: &State, index: u32, mode: ParameterMode) -> i32 {
+    let raw_op = state.positions[index as usize];
+    if mode == ParameterMode::Immediate {
+        return raw_op;
+    } else {
+        return state.positions[raw_op as usize];
+    }
+}
+
+pub fn reducer(state: &State, operation: &Operation) -> State {
+    let mut new_state = State {
+        positions: state.positions.clone(),
+        program_counter: state.program_counter + 1 + operation.parameter_count,
+    };
+
+    let program_counter = state.program_counter;
+    match operation.opcode {
+        OpCode::Add => {
+            let param_a = get_value(state, program_counter + 1, operation.modes[0]);
+            let param_b = get_value(state, program_counter + 2, operation.modes[1]);
+            let result = param_a + param_b;
+            let pos_res = state.positions[(program_counter + 3) as usize];
+            new_state.positions[pos_res as usize] = result;
+        }
+        OpCode::Multiply => {
+            let param_a = get_value(state, program_counter + 1, operation.modes[0]);
+            let param_b = get_value(state, program_counter + 2, operation.modes[1]);
+            let result = param_a * param_b;
+            let pos_res = state.positions[(program_counter + 3) as usize];
+            new_state.positions[pos_res as usize] = result;
+        }
+        OpCode::Input => {
+            // Ask for input
+            let result: i32 = super::utils::get_number_from_stdio::<i32>().unwrap();
+            let pos_res = state.positions[(program_counter + 1) as usize];
+            new_state.positions[pos_res as usize] = result;
+        }
+        OpCode::Output => {
+            let param = get_value(state, program_counter + 1, operation.modes[0]);
+            println!("Output: {:?}", param);
+        }
+        OpCode::Halt => {}
+    }
+    return new_state;
+}
+
+pub fn get_operation(state: &State) -> Operation {
+    let program_counter = state.program_counter;
+    let raw_opcode = state.positions[program_counter as usize] as u32;
+    let opcode_number = raw_opcode % 100;
+    let mut modes_number: u32 = raw_opcode / 100;
+    let mut operation = Operation {
+        opcode: OpCode::Halt,
+        parameter_count: 0,
+        modes: vec![],
+    };
+    if opcode_number == 1 {
+        operation.opcode = OpCode::Add;
+        operation.parameter_count = 2;
+    } else if opcode_number == 2 {
+        operation.opcode = OpCode::Multiply;
+        operation.parameter_count = 2;
+    } else if opcode_number == 3 {
+        operation.opcode = OpCode::Input;
+        operation.parameter_count = 1;
+    } else if opcode_number == 4 {
+        operation.opcode = OpCode::Output;
+        operation.parameter_count = 1;
+    }
+    // Convert `modes_number` to modes
+    for _i in 0..operation.parameter_count {
+        let res = modes_number % 10;
+        modes_number = modes_number / 10;
+        operation.modes.push(if res == 1 {
+            ParameterMode::Immediate
+        } else {
+            ParameterMode::Position
+        });
+    }
+
+    return operation;
+}
+
+pub fn run_program(positions: Vec<i32>) -> State {
+    let program_counter = 0;
+    // TODO: increase the `positions` space, because address can be stored anywhere!
+    let mut state = State {
+        positions,
+        program_counter,
+    };
+
+    let mut iteration = 0;
+    while iteration < 1000 {
+        let operation = get_operation(&state);
+        // println!("it {:?}, {:?}", iteration, operation);
+        if operation.opcode == OpCode::Halt {
+            break;
+        }
+        // println!("iteration1 {:?}: {:?} {:?}", iteration, state, operation);
+        let next_state = reducer(&state, &operation);
+        state = next_state;
+        // println!("iteration2 {:?}: {:?}", iteration, state);
+        if state.program_counter as usize >= state.positions.len() {
+            break;
+        }
+        iteration += 1;
+    }
+    // println!("Final {:?}", state);
+    return state;
+}

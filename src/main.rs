@@ -1,6 +1,7 @@
-mod day03;
+mod day05;
 mod utils;
+mod program;
 
 fn main() {
-    day03::main();
+    day05::main();
 }
