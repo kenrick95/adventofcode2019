@@ -90,10 +90,10 @@ pub fn get_operation(state: &State) -> Operation {
     };
     if opcode_number == 1 {
         operation.opcode = OpCode::Add;
-        operation.parameter_count = 2;
+        operation.parameter_count = 3;
     } else if opcode_number == 2 {
         operation.opcode = OpCode::Multiply;
-        operation.parameter_count = 2;
+        operation.parameter_count = 3;
     } else if opcode_number == 3 {
         operation.opcode = OpCode::Input;
         operation.parameter_count = 1;
@@ -115,9 +115,13 @@ pub fn get_operation(state: &State) -> Operation {
     return operation;
 }
 
-pub fn run_program(positions: Vec<i32>) -> State {
+pub fn run_program(raw_positions: Vec<i32>) -> State {
     let program_counter = 0;
-    // TODO: increase the `positions` space, because address can be stored anywhere!
+    let mut positions = vec![0; 10000];
+    for (i, post) in raw_positions.iter().enumerate() {
+        positions[i] = *post;
+    }
+
     let mut state = State {
         positions,
         program_counter,
