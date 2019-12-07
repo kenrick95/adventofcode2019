@@ -4,7 +4,13 @@ fn run_program_with_tweak(positions: &Vec<i32>, a: i32, b: i32) -> State {
     let mut temp = positions.clone();
     temp[1] = a;
     temp[2] = b;
-    return run_program(temp);
+    return run_program(
+        temp,
+        || super::utils::get_number_from_stdio::<i32>().unwrap(),
+        |result: i32| {
+            println!("Output: {:?}", result);
+        },
+    );
 }
 
 pub fn main() {

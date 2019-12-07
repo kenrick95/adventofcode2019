@@ -7,5 +7,11 @@ pub fn main() {
         .map(|val| val.parse().unwrap())
         .collect();
     println!("Positions {:?}", positions);
-    run_program(positions);
+    run_program(
+        positions,
+        || super::utils::get_number_from_stdio::<i32>().unwrap(),
+        |result: i32| {
+            println!("Output: {:?}", result);
+        },
+    );
 }

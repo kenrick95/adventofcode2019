@@ -45,7 +45,11 @@ pub fn get_value(state: &State, index: u32, mode: ParameterMode) -> i32 {
     }
 }
 
-pub fn reducer(state: &State, operation: &Operation) -> State {
+pub fn reducer<I, O>(state: &State, operation: &Operation, get_input: I, write_output: O) -> State
+where
+    I: Fn() -> i32,
+    O: Fn(i32),
+{
     let mut new_state = State {
         positions: state.positions.clone(),
         program_counter: state.program_counter + 1 + operation.parameter_count,
@@ -69,12 +73,13 @@ pub fn reducer(state: &State, operation: &Operation) -> State {
         }
         OpCode::Input => {
             // Ask for input
-            let result: i32 = super::utils::get_number_from_stdio::<i32>().unwrap();
+            let result: i32 = get_input();
             let pos_res = state.positions[(program_counter + 1) as usize];
             new_state.positions[pos_res as usize] = result;
         }
         OpCode::Output => {
             let param = get_value(state, program_counter + 1, operation.modes[0]);
+            write_output(param);
             println!("Output: {:?}", param);
         }
         OpCode::JumpIfTrue => {
@@ -167,7 +172,11 @@ pub fn get_operation(state: &State) -> Operation {
     return operation;
 }
 
-pub fn run_program(raw_positions: Vec<i32>) -> State {
+pub fn run_program<I, O>(raw_positions: Vec<i32>, get_input: I, write_output: O) -> State
+where
+    I: Fn() -> i32,
+    O: Fn(i32),
+{
     let program_counter = 0;
     let mut positions = vec![0; 10000];
     for (i, post) in raw_positions.iter().enumerate() {
@@ -187,7 +196,7 @@ pub fn run_program(raw_positions: Vec<i32>) -> State {
             break;
         }
         // println!("iteration1 {:?}: {:?} {:?}", iteration, state, operation);
-        let next_state = reducer(&state, &operation);
+        let next_state = reducer(&state, &operation, &get_input, &write_output);
         state = next_state;
         // println!("iteration2 {:?}: {:?}", iteration, state);
         if state.program_counter as usize >= state.positions.len() {
