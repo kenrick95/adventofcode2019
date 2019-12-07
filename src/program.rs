@@ -80,7 +80,7 @@ where
         OpCode::Output => {
             let param = get_value(state, program_counter + 1, operation.modes[0]);
             write_output(param);
-            println!("Output: {:?}", param);
+            // println!("Output: {:?}", param);
         }
         OpCode::JumpIfTrue => {
             let param_a = get_value(state, program_counter + 1, operation.modes[0]);
