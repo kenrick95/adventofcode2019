@@ -6,10 +6,12 @@ fn run_program_with_tweak(positions: &Vec<i32>, a: i32, b: i32) -> State {
     temp[2] = b;
     return run_program(
         temp,
+        0,
         || super::utils::get_number_from_stdio::<i32>().unwrap(),
         |result: i32| {
             println!("Output: {:?}", result);
         },
+        |_state| false,
     );
 }
 

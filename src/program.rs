@@ -25,9 +25,9 @@ pub enum ParameterMode {
 
 #[derive(PartialEq, Debug)]
 pub struct Operation {
-    opcode: OpCode,
+    pub opcode: OpCode,
     parameter_count: u32,
-    modes: Vec<ParameterMode>,
+    pub modes: Vec<ParameterMode>,
 }
 
 #[derive(Debug)]
@@ -172,12 +172,19 @@ pub fn get_operation(state: &State) -> Operation {
     return operation;
 }
 
-pub fn run_program<I, O>(raw_positions: Vec<i32>, get_input: I, write_output: O) -> State
+pub fn run_program<I, O, SH>(
+    raw_positions: Vec<i32>,
+    start_program_counter: u32,
+    get_input: I,
+    write_output: O,
+    should_halt: SH,
+) -> State
 where
     I: Fn() -> i32,
     O: Fn(i32),
+    SH: Fn(&State) -> bool,
 {
-    let program_counter = 0;
+    let program_counter = start_program_counter;
     let mut positions = vec![0; 10000];
     for (i, post) in raw_positions.iter().enumerate() {
         positions[i] = *post;
@@ -198,6 +205,9 @@ where
         // println!("iteration1 {:?}: {:?} {:?}", iteration, state, operation);
         let next_state = reducer(&state, &operation, &get_input, &write_output);
         state = next_state;
+        if should_halt(&state) {
+            break;
+        }
         // println!("iteration2 {:?}: {:?}", iteration, state);
         if state.program_counter as usize >= state.positions.len() {
             break;
