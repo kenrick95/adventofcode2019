@@ -1,5 +1,6 @@
 use super::program::*;
 use std::cell::RefCell;
+use std::collections::HashSet;
 // use std::sync::{Arc, Mutex};
 
 /**
@@ -21,9 +22,10 @@ pub fn main() {
     println!("Positions {:?}", positions);
 
     let num_programs = 5;
-    let configs = Configs::new(num_programs);
+    let configs = Configs::new(vec![0, 1, 2, 3, 4]);
     let mut max_last_result = std::i32::MIN;
     let mut configs_for_max_last_result = vec![0, 1, 2, 3, 4];
+    
     for config in configs {
         // let program_results = Arc::new(Mutex::new(Vec::new()));
         let program_results = RefCell::new(vec![0; num_programs]);
@@ -67,43 +69,54 @@ pub fn main() {
 
 #[derive(PartialEq, Debug)]
 struct Configs {
-    configs: Vec<i32>,
-    count: usize,
+    initial_state: Vec<i32>,
+    index: usize,
 }
 
 impl Configs {
-    fn new(size: usize) -> Configs {
+    fn new(initial_state: Vec<i32>) -> Configs {
         Configs {
-            configs: vec![0; size],
-            count: 0,
+            initial_state: initial_state,
+            index: 0,
         }
     }
 }
 
-// TODO: Bug here, `44444` is not valid. Need to implement a real next_permutation
 impl Iterator for Configs {
     type Item = Vec<i32>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.count += 1;
-        let space: usize = 5;
-        if self.count == 1 {
-            Some(self.configs.clone())
-        } else if self.count <= space.pow(self.configs.len() as u32) {
-            let mut i = 0;
-            loop {
-                if self.configs[i] + 1 < space as i32 {
-                    self.configs[i] += 1;
-                    break;
-                } else {
-                    self.configs[i] = 0;
-                    i += 1;
-                }
+        let len = self.initial_state.len();
+        if self.index < factorial(len) {
+            let mut result = vec![0; len];
+
+            let mut digits: HashSet<i32> = HashSet::new();
+            for number in self.initial_state.clone() {
+                digits.insert(number);
             }
 
-            Some(self.configs.clone())
+            for i in 0..len {
+                let mut digits_sorted: Vec<i32> = digits.clone().into_iter().collect();
+                digits_sorted.sort();
+                let chosen =
+                    digits_sorted[(self.index % factorial(len - i)) / factorial(len - i - 1)];
+                digits.remove(&chosen);
+                result[i] = chosen;
+            }
+
+            self.index += 1;
+            Some(result)
         } else {
             None
         }
+    }
+}
+
+// NOTE: Try to memoize this
+fn factorial(number: usize) -> usize {
+    if number <= 1 {
+        return 1;
+    } else {
+        return number * factorial(number - 1);
     }
 }
