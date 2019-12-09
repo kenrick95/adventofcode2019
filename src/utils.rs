@@ -16,3 +16,11 @@ pub fn get_string_from_stdio() -> String {
     io::stdin().read_line(&mut input_str).unwrap();
     return input_str;
 }
+
+pub fn get_list_of_numbers() -> Vec<i32> {
+    return get_string_from_stdio()
+        .trim()
+        .split(",")
+        .map(|val| val.parse().unwrap())
+        .collect();
+}

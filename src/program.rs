@@ -8,6 +8,7 @@ pub enum OpCode {
     JumpIfFalse,
     LessThan,
     Equals,
+    AdjustRelativeBase,
     Halt,
 }
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -21,6 +22,11 @@ pub enum ParameterMode {
      * Parameters that an instruction writes to will never be in immediate mode.
      */
     Immediate,
+
+    /**
+     * "position" as relative value to the `relative_base`
+     */
+    Relative,
 }
 
 #[derive(PartialEq, Debug)]
@@ -34,12 +40,16 @@ pub struct Operation {
 pub struct State {
     pub positions: Vec<i32>,
     pub program_counter: u32,
+    // TODO: Maybe not large enough
+    pub relative_base: u32,
 }
 
 pub fn get_value(state: &State, index: u32, mode: ParameterMode) -> i32 {
     let raw_op = state.positions[index as usize];
     if mode == ParameterMode::Immediate {
         return raw_op;
+    } else if mode == ParameterMode::Relative {
+        return state.relative_base as i32 + index as i32;
     } else {
         return state.positions[raw_op as usize];
     }
@@ -53,6 +63,7 @@ where
     let mut new_state = State {
         positions: state.positions.clone(),
         program_counter: state.program_counter + 1 + operation.parameter_count,
+        relative_base: state.relative_base,
     };
 
     let program_counter = state.program_counter;
@@ -108,6 +119,10 @@ where
             let pos_res = state.positions[(program_counter + 3) as usize];
             new_state.positions[pos_res as usize] = if param_a == param_b { 1 } else { 0 };
         }
+        OpCode::AdjustRelativeBase => {
+            let param = get_value(state, program_counter + 1, operation.modes[0]);
+            new_state.relative_base = (new_state.relative_base as i32 + param) as u32;
+        }
         OpCode::Halt => {}
     }
     return new_state;
@@ -156,6 +171,10 @@ pub fn get_operation(state: &State) -> Operation {
             operation.opcode = OpCode::Equals;
             operation.parameter_count = 3;
         }
+        9 => {
+            operation.opcode = OpCode::AdjustRelativeBase;
+            operation.parameter_count = 1;
+        }
         _ => {}
     }
     // Convert `modes_number` to modes
@@ -185,7 +204,7 @@ where
     SH: Fn(&State) -> bool,
 {
     let program_counter = start_program_counter;
-    let mut positions = vec![0; 10000];
+    let mut positions = vec![0; 10000]; // TODO: Maybe not enough....
     for (i, post) in raw_positions.iter().enumerate() {
         positions[i] = *post;
     }
@@ -193,6 +212,7 @@ where
     let mut state = State {
         positions,
         program_counter,
+        relative_base: 0,
     };
 
     let mut iteration = 0;
