@@ -40,7 +40,6 @@ pub struct Operation {
 pub struct State {
     pub positions: Vec<i128>,
     pub program_counter: usize,
-    // TODO: Maybe not large enough
     pub relative_base: i128,
 }
 
@@ -218,7 +217,7 @@ where
     SH: Fn(&State) -> bool,
 {
     let program_counter = start_program_counter;
-    let mut positions = vec![0; 10000]; // TODO: Maybe not enough....
+    let mut positions = vec![0; 10000];
     for (i, post) in raw_positions.iter().enumerate() {
         positions[i] = *post;
     }

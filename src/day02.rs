@@ -1,14 +1,14 @@
 use super::program::*;
 
-fn run_program_with_tweak(positions: &Vec<i32>, a: i32, b: i32) -> State {
+fn run_program_with_tweak(positions: &Vec<i128>, a: i128, b: i128) -> State {
     let mut temp = positions.clone();
     temp[1] = a;
     temp[2] = b;
     return run_program(
         temp,
         0,
-        || super::utils::get_number_from_stdio::<i32>().unwrap(),
-        |result: i32| {
+        || super::utils::get_number_from_stdio::<i128>().unwrap(),
+        |result: i128| {
             println!("Output: {:?}", result);
         },
         |_state| false,
@@ -16,11 +16,7 @@ fn run_program_with_tweak(positions: &Vec<i32>, a: i32, b: i32) -> State {
 }
 
 pub fn main() {
-    let positions: Vec<i32> = super::utils::get_string_from_stdio()
-        .trim()
-        .split(",")
-        .map(|val| val.parse().unwrap())
-        .collect();
+    let positions = super::utils::get_list_of_numbers::<i128>();
     println!("Positions {:?}", positions);
 
     println!(
