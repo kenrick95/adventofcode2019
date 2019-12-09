@@ -17,7 +17,10 @@ pub fn get_string_from_stdio() -> String {
     return input_str;
 }
 
-pub fn get_list_of_numbers() -> Vec<i32> {
+pub fn get_list_of_numbers<T: FromStr>() -> Vec<T>
+where
+    <T as std::str::FromStr>::Err: std::fmt::Debug,
+{
     return get_string_from_stdio()
         .trim()
         .split(",")

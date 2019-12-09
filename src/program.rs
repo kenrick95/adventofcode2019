@@ -32,33 +32,43 @@ pub enum ParameterMode {
 #[derive(PartialEq, Debug)]
 pub struct Operation {
     pub opcode: OpCode,
-    parameter_count: u32,
+    parameter_count: usize,
     pub modes: Vec<ParameterMode>,
 }
 
 #[derive(Debug)]
 pub struct State {
-    pub positions: Vec<i32>,
-    pub program_counter: u32,
+    pub positions: Vec<i128>,
+    pub program_counter: usize,
     // TODO: Maybe not large enough
-    pub relative_base: u32,
+    pub relative_base: i128,
 }
 
-pub fn get_value(state: &State, index: u32, mode: ParameterMode) -> i32 {
+pub fn get_value(state: &State, index: usize, mode: ParameterMode) -> i128 {
     let raw_op = state.positions[index as usize];
     if mode == ParameterMode::Immediate {
         return raw_op;
     } else if mode == ParameterMode::Relative {
-        return state.relative_base as i32 + index as i32;
+        return state.positions[(state.relative_base as i128 + index as i128) as usize];
     } else {
         return state.positions[raw_op as usize];
     }
 }
 
+
+pub fn get_pos_res(state: &State, index: usize, mode: ParameterMode) -> usize {
+    let raw_op = state.positions[index as usize];
+    if mode == ParameterMode::Relative {
+        return (state.relative_base + raw_op) as usize;
+    } else {
+        return raw_op as usize;
+    }
+}
+
 pub fn reducer<I, O>(state: &State, operation: &Operation, get_input: I, write_output: O) -> State
 where
-    I: Fn() -> i32,
-    O: Fn(i32),
+    I: Fn() -> i128,
+    O: Fn(i128),
 {
     let mut new_state = State {
         positions: state.positions.clone(),
@@ -72,21 +82,21 @@ where
             let param_a = get_value(state, program_counter + 1, operation.modes[0]);
             let param_b = get_value(state, program_counter + 2, operation.modes[1]);
             let result = param_a + param_b;
-            let pos_res = state.positions[(program_counter + 3) as usize];
-            new_state.positions[pos_res as usize] = result;
+            let pos_res = get_pos_res(state, program_counter + 3, operation.modes[2]);
+            new_state.positions[pos_res] = result;
         }
         OpCode::Multiply => {
             let param_a = get_value(state, program_counter + 1, operation.modes[0]);
             let param_b = get_value(state, program_counter + 2, operation.modes[1]);
             let result = param_a * param_b;
-            let pos_res = state.positions[(program_counter + 3) as usize];
-            new_state.positions[pos_res as usize] = result;
+            let pos_res = get_pos_res(state, program_counter + 3, operation.modes[2]);
+            new_state.positions[pos_res] = result;
         }
         OpCode::Input => {
             // Ask for input
-            let result: i32 = get_input();
-            let pos_res = state.positions[(program_counter + 1) as usize];
-            new_state.positions[pos_res as usize] = result;
+            let result: i128 = get_input();
+            let pos_res = get_pos_res(state, program_counter + 1, operation.modes[0]);
+            new_state.positions[pos_res] = result;
         }
         OpCode::Output => {
             let param = get_value(state, program_counter + 1, operation.modes[0]);
@@ -97,31 +107,33 @@ where
             let param_a = get_value(state, program_counter + 1, operation.modes[0]);
             let param_b = get_value(state, program_counter + 2, operation.modes[1]);
             if param_a != 0 {
-                new_state.program_counter = param_b as u32;
+                new_state.program_counter = param_b as usize;
             }
         }
         OpCode::JumpIfFalse => {
             let param_a = get_value(state, program_counter + 1, operation.modes[0]);
             let param_b = get_value(state, program_counter + 2, operation.modes[1]);
             if param_a == 0 {
-                new_state.program_counter = param_b as u32;
+                new_state.program_counter = param_b as usize;
             }
         }
         OpCode::LessThan => {
             let param_a = get_value(state, program_counter + 1, operation.modes[0]);
             let param_b = get_value(state, program_counter + 2, operation.modes[1]);
-            let pos_res = state.positions[(program_counter + 3) as usize];
-            new_state.positions[pos_res as usize] = if param_a < param_b { 1 } else { 0 };
+            let result = if param_a < param_b { 1 } else { 0 };
+            let pos_res = get_pos_res(state, program_counter + 3, operation.modes[2]);
+            new_state.positions[pos_res] = result;
         }
         OpCode::Equals => {
             let param_a = get_value(state, program_counter + 1, operation.modes[0]);
             let param_b = get_value(state, program_counter + 2, operation.modes[1]);
-            let pos_res = state.positions[(program_counter + 3) as usize];
-            new_state.positions[pos_res as usize] = if param_a == param_b { 1 } else { 0 };
+            let result = if param_a == param_b { 1 } else { 0 };
+            let pos_res = get_pos_res(state, program_counter + 3, operation.modes[2]);
+            new_state.positions[pos_res] = result;
         }
         OpCode::AdjustRelativeBase => {
             let param = get_value(state, program_counter + 1, operation.modes[0]);
-            new_state.relative_base = (new_state.relative_base as i32 + param) as u32;
+            new_state.relative_base = new_state.relative_base + param;
         }
         OpCode::Halt => {}
     }
@@ -130,9 +142,9 @@ where
 
 pub fn get_operation(state: &State) -> Operation {
     let program_counter = state.program_counter;
-    let raw_opcode = state.positions[program_counter as usize] as u32;
+    let raw_opcode = state.positions[program_counter as usize] as usize;
     let opcode_number = raw_opcode % 100;
-    let mut modes_number: u32 = raw_opcode / 100;
+    let mut modes_number: usize = raw_opcode / 100;
     let mut operation = Operation {
         opcode: OpCode::Halt,
         parameter_count: 0,
@@ -183,6 +195,8 @@ pub fn get_operation(state: &State) -> Operation {
         modes_number = modes_number / 10;
         operation.modes.push(if res == 1 {
             ParameterMode::Immediate
+        } else if res == 2 {
+            ParameterMode::Relative
         } else {
             ParameterMode::Position
         });
@@ -192,15 +206,15 @@ pub fn get_operation(state: &State) -> Operation {
 }
 
 pub fn run_program<I, O, SH>(
-    raw_positions: Vec<i32>,
-    start_program_counter: u32,
+    raw_positions: Vec<i128>,
+    start_program_counter: usize,
     get_input: I,
     write_output: O,
     should_halt: SH,
 ) -> State
 where
-    I: Fn() -> i32,
-    O: Fn(i32),
+    I: Fn() -> i128,
+    O: Fn(i128),
     SH: Fn(&State) -> bool,
 {
     let program_counter = start_program_counter;
