@@ -49,7 +49,7 @@ pub fn get_value(state: &State, index: usize, mode: ParameterMode) -> i128 {
     if mode == ParameterMode::Immediate {
         return raw_op;
     } else if mode == ParameterMode::Relative {
-        return state.positions[(state.relative_base as i128 + index as i128) as usize];
+        return state.positions[(state.relative_base + raw_op) as usize];
     } else {
         return state.positions[raw_op as usize];
     }
@@ -230,7 +230,7 @@ where
     };
 
     let mut iteration = 0;
-    while iteration < 1000 {
+    while iteration < 1000000 {
         let operation = get_operation(&state);
         // println!("it {:?}, {:?}", iteration, operation);
         if operation.opcode == OpCode::Halt {
