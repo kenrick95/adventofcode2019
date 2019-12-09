@@ -251,3 +251,60 @@ where
     // println!("Final {:?}", state);
     return state;
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn get_value_basic() {
+        let state = State {
+            positions: vec![0],
+            program_counter: 0,
+            relative_base: 0,
+        };
+        assert_eq!(get_value(&state, 0, ParameterMode::Immediate), 0);
+        assert_eq!(get_value(&state, 0, ParameterMode::Position), 0);
+        assert_eq!(get_value(&state, 0, ParameterMode::Relative), 0);
+    }
+
+    
+    #[test]
+    fn get_value_basic_2() {
+        let state = State {
+            positions: vec![3, 2, 0, 1, 0, 99],
+            program_counter: 2,
+            relative_base: 3,
+        };
+        assert_eq!(get_value(&state, 3, ParameterMode::Immediate), 1);
+        assert_eq!(get_value(&state, 3, ParameterMode::Position), 2);
+        assert_eq!(get_value(&state, 3, ParameterMode::Relative), 0);
+    }
+
+
+    #[test]
+    fn get_pos_res_1() {
+        let state = State {
+            positions: vec![0],
+            program_counter: 0,
+            relative_base: 0,
+        };
+        assert_eq!(get_pos_res(&state, 0, ParameterMode::Position), 0);
+        assert_eq!(get_pos_res(&state, 0, ParameterMode::Relative), 0);
+    }
+    
+    #[test]
+    fn get_pos_res_2() {
+        let state = State {
+            positions: vec![3, 2, 0, 1, 0, 99],
+            program_counter: 2,
+            relative_base: 3,
+        };
+        assert_eq!(get_pos_res(&state, 3, ParameterMode::Position), 1);
+        assert_eq!(get_pos_res(&state, 3, ParameterMode::Relative), 4);
+    }
+
+}
