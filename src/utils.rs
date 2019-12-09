@@ -8,22 +8,22 @@ where
     let mut input_str = String::new();
     io::stdin().read_line(&mut input_str).unwrap();
     let input_number: T = input_str.trim().parse()?;
-    return Ok(input_number);
+    Ok(input_number)
 }
 
 pub fn get_string_from_stdio() -> String {
     let mut input_str = String::new();
     io::stdin().read_line(&mut input_str).unwrap();
-    return input_str;
+    input_str
 }
 
 pub fn get_list_of_numbers<T: FromStr>() -> Vec<T>
 where
     <T as std::str::FromStr>::Err: std::fmt::Debug,
 {
-    return get_string_from_stdio()
+    get_string_from_stdio()
         .trim()
-        .split(",")
+        .split(',')
         .map(|val| val.parse().unwrap())
-        .collect();
+        .collect()
 }

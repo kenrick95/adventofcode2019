@@ -46,21 +46,20 @@ pub struct State {
 pub fn get_value(state: &State, index: usize, mode: ParameterMode) -> i128 {
     let raw_op = state.positions[index as usize];
     if mode == ParameterMode::Immediate {
-        return raw_op;
+        raw_op
     } else if mode == ParameterMode::Relative {
-        return state.positions[(state.relative_base + raw_op) as usize];
+        state.positions[(state.relative_base + raw_op) as usize]
     } else {
-        return state.positions[raw_op as usize];
+        state.positions[raw_op as usize]
     }
 }
-
 
 pub fn get_pos_res(state: &State, index: usize, mode: ParameterMode) -> usize {
     let raw_op = state.positions[index as usize];
     if mode == ParameterMode::Relative {
-        return (state.relative_base + raw_op) as usize;
+        (state.relative_base + raw_op) as usize
     } else {
-        return raw_op as usize;
+        raw_op as usize
     }
 }
 
@@ -132,11 +131,11 @@ where
         }
         OpCode::AdjustRelativeBase => {
             let param = get_value(state, program_counter + 1, operation.modes[0]);
-            new_state.relative_base = new_state.relative_base + param;
+            new_state.relative_base += param;
         }
         OpCode::Halt => {}
     }
-    return new_state;
+    new_state
 }
 
 pub fn get_operation(state: &State) -> Operation {
@@ -191,7 +190,7 @@ pub fn get_operation(state: &State) -> Operation {
     // Convert `modes_number` to modes
     for _i in 0..operation.parameter_count {
         let res = modes_number % 10;
-        modes_number = modes_number / 10;
+        modes_number /= 10;
         operation.modes.push(if res == 1 {
             ParameterMode::Immediate
         } else if res == 2 {
@@ -201,7 +200,7 @@ pub fn get_operation(state: &State) -> Operation {
         });
     }
 
-    return operation;
+    operation
 }
 
 pub fn run_program<I, O, SH>(
@@ -229,7 +228,7 @@ where
     };
 
     let mut iteration = 0;
-    while iteration < 1000000 {
+    while iteration < 1_000_000 {
         let operation = get_operation(&state);
         // println!("it {:?}, {:?}", iteration, operation);
         if operation.opcode == OpCode::Halt {
@@ -248,10 +247,8 @@ where
         iteration += 1;
     }
     // println!("Final {:?}", state);
-    return state;
+    state
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -270,7 +267,6 @@ mod tests {
         assert_eq!(get_value(&state, 0, ParameterMode::Relative), 0);
     }
 
-    
     #[test]
     fn get_value_basic_2() {
         let state = State {
@@ -283,7 +279,6 @@ mod tests {
         assert_eq!(get_value(&state, 3, ParameterMode::Relative), 0);
     }
 
-
     #[test]
     fn get_pos_res_1() {
         let state = State {
@@ -294,7 +289,6 @@ mod tests {
         assert_eq!(get_pos_res(&state, 0, ParameterMode::Position), 0);
         assert_eq!(get_pos_res(&state, 0, ParameterMode::Relative), 0);
     }
-    
     #[test]
     fn get_pos_res_2() {
         let state = State {
@@ -305,5 +299,4 @@ mod tests {
         assert_eq!(get_pos_res(&state, 3, ParameterMode::Position), 1);
         assert_eq!(get_pos_res(&state, 3, ParameterMode::Relative), 4);
     }
-
 }
