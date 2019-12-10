@@ -14,16 +14,12 @@ pub fn main() {
     }
     // (y,x)
     let mut locations: Vec<(usize, usize)> = vec![];
-    let mut y = 0;
-    for line in inputs {
-        let mut x = 0;
-        for ch in line.chars() {
+    for (y, line) in inputs.iter().enumerate() {
+        for (x, ch) in line.chars().enumerate() {
             if ch == '#' {
                 locations.push((y, x));
             }
-            x += 1;
         }
-        y += 1;
     }
 
     // for each '#', check gradient of all other '#', count different number of gradients
@@ -35,11 +31,10 @@ pub fn main() {
     for i in 0..locations_length {
         let location = locations[i];
         let mut set: HashSet<(isize, isize)> = HashSet::new();
-        for j in 0..locations_length {
+        for (j, &other_location) in locations.iter().enumerate().take(locations_length) {
             if i == j {
                 continue;
             }
-            let other_location = locations[j];
             let gradient = get_gradient(location, other_location);
             set.insert((gradient.0, gradient.1));
 
@@ -51,7 +46,7 @@ pub fn main() {
         let set_count = set.len();
         if set_count > max_count {
             max_count = set_count;
-            max_count_location = location.clone();
+            max_count_location = location;
         }
 
         // println!(">>>>> location {:?} ---> {:?} ", location, set.len());
@@ -66,8 +61,7 @@ pub fn main() {
     {
         // Array of (gradient, point); where gradient (dy, dx) and point = (y, x)
         let mut points: Vec<((isize, isize), (usize, usize))> = vec![];
-        for j in 0..locations_length {
-            let other_location = locations[j];
+        for other_location in locations {
             if max_count_location.0 == other_location.0 && max_count_location.1 == other_location.1
             {
                 continue;
@@ -154,7 +148,7 @@ pub fn main() {
                 // println!("Iteration {:?} {:?}; blasting {:?}", iteration, i, point);
             }
 
-            if mark.iter().find(|&&m| m == false).is_none() {
+            if mark.iter().find(|&&m| !m).is_none() {
                 // println!("Iteration {:?}: None is false", iteration);
                 break;
             }
@@ -187,6 +181,5 @@ fn get_gcd(a: usize, b: usize) -> usize {
 }
 
 fn dist_sq(a: (usize, usize), b: (usize, usize)) -> usize {
-    return (a.0 as isize - b.0 as isize).pow(2) as usize
-        + (a.1 as isize - b.1 as isize).pow(2) as usize;
+    (a.0 as isize - b.0 as isize).pow(2) as usize + (a.1 as isize - b.1 as isize).pow(2) as usize
 }
