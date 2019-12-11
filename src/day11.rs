@@ -27,7 +27,7 @@ struct RobotState {
 fn run_robot(
     starting_state: &State,
     starting_map: &HashMap<(i128, i128), Color>,
-) -> (HashSet<(i128, i128)>, HashMap<(i128, i128), Color>) {
+) -> HashMap<(i128, i128), Color> {
     // : HashMap<(i128, i128), Color>
     let map = RefCell::new(starting_map.clone());
     // (y, x); : HashSet<(i128, i128)>
@@ -39,9 +39,9 @@ fn run_robot(
     });
 
     let output_counter = RefCell::new(0);
-    let new_state = run_program(
+    run_program(
         starting_state.positions.clone(),
-        starting_state.program_counter.clone(),
+        starting_state.program_counter,
         || {
             let current_robot_state = robot_state.borrow().clone();
             let current_map = map.borrow().clone();
@@ -58,7 +58,7 @@ fn run_robot(
             let mut current_map = map.borrow().clone();
             let mut current_robot_state = robot_state.borrow().clone();
             let mut current_painted_locations = painted_locations.borrow().clone();
-            let current_output_count: u128 = output_counter.borrow().clone();
+            let current_output_count: u128 = *output_counter.borrow();
             // Program will output twice! First output is next_color; second output is next_direction.
             if current_output_count % 2 == 0 {
                 let next_color = match result {
@@ -118,7 +118,7 @@ fn run_robot(
     let final_painted_colors = map.borrow().clone();
     println!("painted_locations: {:?}", final_painted_locations);
     println!("Answer part 1: {:?}", final_painted_locations.len());
-    (final_painted_locations, final_painted_colors)
+    final_painted_colors
 }
 
 fn part1(positions: Vec<i128>) {
@@ -138,7 +138,7 @@ fn part2(positions: Vec<i128>) {
     };
     let mut robot_map = HashMap::new();
     robot_map.insert((0, 0), Color::White);
-    let (painted_locations, painted_colors) = run_robot(&starting_state, &robot_map);
+    let painted_colors = run_robot(&starting_state, &robot_map);
     const OFFSET: usize = 50;
 
     let mut print_map = vec![vec![Color::Black; OFFSET * 2]; OFFSET * 2];
@@ -151,18 +151,17 @@ fn part2(positions: Vec<i128>) {
             }
         }
     }
-    for i in 0..(OFFSET * 2) {
-        for j in 0..(OFFSET * 2) {
-            if print_map[i][j] == Color::Black {
+    for line in print_map {
+        for color in line {
+            if color == Color::Black {
                 print!(" ");
             } else {
                 print!("#");
             }
         }
-        println!(""); 
+        println!();
     }
     // LBJHEKLH printed out in reverse ?!
-
 }
 
 pub fn main() {
