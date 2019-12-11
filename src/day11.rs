@@ -96,9 +96,9 @@ fn run_robot(
                 // After robot "turns", it should move forward exactly once
                 let (dy, dx) = match current_robot_state.direction {
                     Direction::Up => (-1, 0),
-                    Direction::Left => (0, 1),
+                    Direction::Left => (0, -1),
                     Direction::Down => (1, 0),
-                    Direction::Right => (0, -1),
+                    Direction::Right => (0, 1),
                 };
                 current_robot_state.location = (
                     current_robot_state.location.0 + dy,
@@ -161,7 +161,7 @@ fn part2(positions: Vec<i128>) {
         }
         println!();
     }
-    // LBJHEKLH printed out in reverse ?!
+    // LBJHEKLH
 }
 
 pub fn main() {
