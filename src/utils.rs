@@ -27,3 +27,15 @@ where
         .map(|val| val.parse().unwrap())
         .collect()
 }
+
+pub fn get_gcd(a: usize, b: usize) -> usize {
+    if b == 0 {
+        a
+    } else {
+        get_gcd(b, a % b)
+    }
+}
+
+pub fn get_lcm(a: usize, b: usize) -> usize {
+    (a / get_gcd(a, b)) * b
+}

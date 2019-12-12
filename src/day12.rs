@@ -2,12 +2,12 @@ use super::utils::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Particle {
-    position: (isize, isize, isize),
-    velocity: (isize, isize, isize),
+    position: (i16, i16, i16),
+    velocity: (i16, i16, i16),
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct State {
     particles: Vec<Particle>,
 }
@@ -30,10 +30,11 @@ pub fn main() {
             velocity: (0, 0, 0),
         });
     }
-    run_simulation(&particles);
+    // run_simulation_pt1(&particles);
+    run_simulation_pt2(&particles);
 }
 
-fn run_simulation(particles: &Vec<Particle>) {
+fn run_simulation_pt1(particles: &Vec<Particle>) {
     let mut t = 0;
     let mut state = State {
         particles: particles.clone(),
@@ -52,9 +53,68 @@ fn run_simulation(particles: &Vec<Particle>) {
     println!("Answer part 1: {:?}", get_total_energy(&state));
 }
 
+/**
+ * Hint: Each axis are independent of each other, so each axis can have their own cycle. Once found, just LCM it.
+ * https://www.reddit.com/r/adventofcode/comments/e9jxh2/help_2019_day_12_part_2_what_am_i_not_seeing/
+ * */
+fn run_simulation_pt2(particles: &Vec<Particle>) {
+    let mut t = 1;
+    let mut state = State {
+        particles: particles.clone(),
+    };
+    let mut cycle_found = vec![false, false, false];
+    // axis --> Array<(position, velocity)>
+    let mut seen_by_axis: Vec<HashSet<Vec<(i16, i16)>>> = vec![HashSet::new(); 3];
+    for i in 0..3 {
+        seen_by_axis[i].insert(
+            state
+                .particles
+                .iter()
+                .map(|p| get_axis_values(p, i))
+                .collect(),
+        );
+    }
+    loop {
+        // println!("[it={:?}]: {:?}", t, state);
+        let mut new_state = apply_gravity(&state);
+        // println!("[it={:?}]: {:?}", t, new_state);
+        new_state = apply_velocity(&new_state);
+        // println!("[it={:?}]: {:?}", t, new_state);
+        state = new_state;
+
+        for i in 0..3 {
+            if cycle_found[i] {
+                continue;
+            }
+            let value = state
+                .particles
+                .iter()
+                .map(|p| get_axis_values(p, i))
+                .collect();
+            if seen_by_axis[i].contains(&value) {
+                cycle_found[i] = true;
+                continue;
+            }
+            seen_by_axis[i].insert(value);
+        }
+        if !cycle_found.contains(&false) {
+            break;
+        }
+        t += 1;
+    }
+    println!("t={:?}", t);
+    let mut answer = 1;
+    for i in 0..3 {
+        answer = get_lcm(answer, seen_by_axis[i].len());
+        println!("seen_by_axis {}: {:?} --> {}", i, seen_by_axis[i].len(), answer);
+    }
+
+    println!("Answer part 2: {:?}", answer);
+}
+
 fn apply_gravity(state: &State) -> State {
     // (particle_index, (dx, dy, dz))
-    let mut delta_v: HashMap<usize, (isize, isize, isize)> = HashMap::new();
+    let mut delta_v: HashMap<usize, (i16, i16, i16)> = HashMap::new();
     let particles = state.particles.clone();
 
     for i in 0..particles.len() {
@@ -99,10 +159,7 @@ fn apply_velocity(state: &State) -> State {
     new_state
 }
 
-fn get_gravity(
-    particle_a: &Particle,
-    particle_b: &Particle,
-) -> ((isize, isize, isize), (isize, isize, isize)) {
+fn get_gravity(particle_a: &Particle, particle_b: &Particle) -> ((i16, i16, i16), (i16, i16, i16)) {
     let delta_i = (
         cmp_value(particle_a.position.0, particle_b.position.0),
         cmp_value(particle_a.position.1, particle_b.position.1),
@@ -110,7 +167,7 @@ fn get_gravity(
     );
     (delta_i, (-delta_i.0, -delta_i.1, -delta_i.2))
 }
-fn cmp_value(value_a: isize, value_b: isize) -> isize {
+fn cmp_value(value_a: i16, value_b: i16) -> i16 {
     if value_a > value_b {
         -1
     } else if value_a < value_b {
@@ -120,16 +177,24 @@ fn cmp_value(value_a: isize, value_b: isize) -> isize {
     }
 }
 
-fn get_total_energy(state: &State) -> isize {
+fn get_total_energy(state: &State) -> i16 {
     let mut answer = 0;
     for particle in state.particles.iter() {
         answer += get_potential_energy(particle) * get_kinetic_energy(particle);
     }
     answer
 }
-fn get_potential_energy(particle: &Particle) -> isize {
+fn get_potential_energy(particle: &Particle) -> i16 {
     particle.position.0.abs() + particle.position.1.abs() + particle.position.2.abs()
 }
-fn get_kinetic_energy(particle: &Particle) -> isize {
+fn get_kinetic_energy(particle: &Particle) -> i16 {
     particle.velocity.0.abs() + particle.velocity.1.abs() + particle.velocity.2.abs()
+}
+fn get_axis_values(particle: &Particle, index: usize) -> (i16, i16) {
+    match index {
+        0 => (particle.position.0, particle.velocity.0),
+        1 => (particle.position.1, particle.velocity.1),
+        2 => (particle.position.2, particle.velocity.2),
+        _ => (0, 0),
+    }
 }
