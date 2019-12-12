@@ -30,14 +30,14 @@ pub fn main() {
             velocity: (0, 0, 0),
         });
     }
-    // run_simulation_pt1(&particles);
+    run_simulation_pt1(&particles);
     run_simulation_pt2(&particles);
 }
 
-fn run_simulation_pt1(particles: &Vec<Particle>) {
+fn run_simulation_pt1(particles: &[Particle]) {
     let mut t = 0;
     let mut state = State {
-        particles: particles.clone(),
+        particles: particles.to_owned(),
     };
     while t < 1000 {
         // println!("[it={:?}]: {:?}", t, state);
@@ -57,16 +57,16 @@ fn run_simulation_pt1(particles: &Vec<Particle>) {
  * Hint: Each axis are independent of each other, so each axis can have their own cycle. Once found, just LCM it.
  * https://www.reddit.com/r/adventofcode/comments/e9jxh2/help_2019_day_12_part_2_what_am_i_not_seeing/
  * */
-fn run_simulation_pt2(particles: &Vec<Particle>) {
+fn run_simulation_pt2(particles: &[Particle]) {
     let mut t = 1;
     let mut state = State {
-        particles: particles.clone(),
+        particles: particles.to_owned(),
     };
     let mut cycle_found = vec![false, false, false];
     // axis --> Array<(position, velocity)>
     let mut seen_by_axis: Vec<HashSet<Vec<(i16, i16)>>> = vec![HashSet::new(); 3];
-    for i in 0..3 {
-        seen_by_axis[i].insert(
+    for (i, seen_axis) in seen_by_axis.iter_mut().enumerate() {
+        seen_axis.insert(
             state
                 .particles
                 .iter()
@@ -104,9 +104,9 @@ fn run_simulation_pt2(particles: &Vec<Particle>) {
     }
     println!("t={:?}", t);
     let mut answer = 1;
-    for i in 0..3 {
-        answer = get_lcm(answer, seen_by_axis[i].len());
-        println!("seen_by_axis {}: {:?} --> {}", i, seen_by_axis[i].len(), answer);
+    for seen in seen_by_axis {
+        answer = get_lcm(answer, seen.len());
+        println!("seen_by_axis: {:?} --> {}", seen.len(), answer);
     }
 
     println!("Answer part 2: {:?}", answer);
