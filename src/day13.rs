@@ -82,14 +82,15 @@ fn part2(positions: &[i128]) {
         modified_positions,
         0,
         || {
-            print_map(&*map.borrow());
-            let term = Term::stdout();
-            let input = term.read_key().unwrap();
-            match input {
-                console::Key::ArrowLeft => JoystickPosition::TiltLeft as i128,
-                console::Key::ArrowRight => JoystickPosition::TiltRight as i128,
-                _ => JoystickPosition::Neutral as i128,
-            }
+            // print_map(&*map.borrow());
+            JoystickPosition::Neutral as i128
+            // let term = Term::stdout();
+            // let input = term.read_key().unwrap();
+            // match input {
+            //     console::Key::ArrowLeft => JoystickPosition::TiltLeft as i128,
+            //     console::Key::ArrowRight => JoystickPosition::TiltRight as i128,
+            //     _ => JoystickPosition::Neutral as i128,
+            // }
         },
         |result: i128| {
             // println!("Output: {:?}", result);
@@ -111,7 +112,7 @@ fn part2(positions: &[i128]) {
         },
         |_state| false,
     );
-    print_map(&*map.borrow());
+    // print_map(&*map.borrow());
 
     clear_screen();
     println!("Answer part 2: {:?}", *answer.borrow());
@@ -155,7 +156,7 @@ fn print_map(map: &HashMap<(u128, u128), Tile>) {
         term.move_cursor_to(location.1 as usize, location.0 as usize);
         term.write_str(&get_tile_as_str(tile));
     }
-    thread::sleep(Duration::from_millis(400));
+    thread::sleep(Duration::from_millis(100));
 }
 
 fn clear_screen() {
