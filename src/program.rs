@@ -206,6 +206,7 @@ pub fn get_operation(state: &State) -> Operation {
 pub fn run_program<I, O, SH>(
     raw_positions: Vec<i128>,
     start_program_counter: usize,
+    start_relative_base: i128,
     get_input: I,
     write_output: O,
     should_halt: SH,
@@ -224,7 +225,7 @@ where
     let mut state = State {
         positions,
         program_counter,
-        relative_base: 0,
+        relative_base: start_relative_base,
     };
 
     let mut iteration = 0;

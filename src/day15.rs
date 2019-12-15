@@ -21,6 +21,7 @@ enum Direction {
 }
 
 pub fn main() {
+    // (y,x)
     let positions = super::utils::get_list_of_numbers_from_file::<i128>("./src/day15-real.log");
     // println!("Positions {:?}", positions);
     part1(&positions.clone());
@@ -29,9 +30,6 @@ pub fn main() {
 
 fn part1(positions: &[i128]) {
     let map: RefCell<HashMap<(i128, i128), Cell>> = RefCell::new(HashMap::new());
-    // (y,x)
-    let location: RefCell<(i128, i128)> = RefCell::new((0, 0));
-
     // Current idea: Just like MDP
     // 1. Exploration (explore map as much as possible)
     //    - Left-wall hugging?
@@ -41,13 +39,15 @@ fn part1(positions: &[i128]) {
     // Another idea:
     // BFS at the "program" level:
     // from [reddit](https://www.reddit.com/r/adventofcode/comments/eaw4ua/2019_day_15_visualization_of_day_15_using_bfs/)
-    // At each step, run "program" at different states
+    // At each step, run "program" at different states; program will halt on every step
 
     // Exploration phase
+    let location: RefCell<(i128, i128)> = RefCell::new((0, 0));
     let next_direction: RefCell<Direction> = RefCell::new(Direction::Up);
     let next_location: RefCell<(i128, i128)> = RefCell::new((1, 0));
     run_program(
         positions.to_owned(),
+        0,
         0,
         || {
             let direction = next_direction.borrow().clone() as i128;

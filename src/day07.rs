@@ -26,6 +26,7 @@ fn part1(positions: Vec<i128>) {
             run_program(
                 positions.clone(),
                 0,
+                0,
                 || {
                     let ifi = is_first_input.borrow().clone();
                     let program_results = program_results.borrow().clone();
@@ -94,6 +95,7 @@ fn part2(positions: Vec<i128>) {
                 let new_state = run_program(
                     program_states[i].positions.clone(),
                     program_states[i].program_counter,
+                    0,
                     || {
                         let ifi = is_first_input.borrow().clone();
                         let program_results = program_results.borrow().clone();

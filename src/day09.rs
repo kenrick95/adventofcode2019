@@ -6,6 +6,7 @@ pub fn main() {
     run_program(
         positions,
         0,
+        0,
         || super::utils::get_number_from_stdio::<i128>().unwrap(),
         |result: i128| {
             println!("Output: {:?}", result);

@@ -7,6 +7,7 @@ fn run_program_with_tweak(positions: &Vec<i128>, a: i128, b: i128) -> State {
     return run_program(
         temp,
         0,
+        0,
         || super::utils::get_number_from_stdio::<i128>().unwrap(),
         |result: i128| {
             println!("Output: {:?}", result);

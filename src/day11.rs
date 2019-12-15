@@ -42,6 +42,7 @@ fn run_robot(
     run_program(
         starting_state.positions.clone(),
         starting_state.program_counter,
+        0,
         || {
             let current_robot_state = robot_state.borrow().clone();
             let current_map = map.borrow().clone();

@@ -48,6 +48,7 @@ fn part1(positions: &[i128]) {
     run_program(
         positions.to_owned(),
         0,
+        0,
         || super::utils::get_number_from_stdio::<i128>().unwrap(),
         |result: i128| {
             // println!("Output: {:?}", result);
@@ -80,6 +81,7 @@ fn part2(positions: &[i128]) {
     let answer = RefCell::new(0);
     run_program(
         modified_positions,
+        0,
         0,
         || {
             // print_map(&*map.borrow());
