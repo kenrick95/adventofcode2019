@@ -53,7 +53,7 @@ pub fn main() {
             ));
             i += 2;
         }
-        println!("groups {:?}", groups);
+        // println!("groups {:?}", groups);
 
         let product = groups.pop().unwrap();
         let reactants = groups;
@@ -95,34 +95,40 @@ pub fn main() {
     // 4 ORE      => 4 FUEL  ÷ 4
     // 1 ORE      => 1 ORE
 
+    // NOTE: There will always be 1 FUEL, so don't need to multiply the reactions
+    // 1. Find a "reactant_to_eliminate"
+    // 2. Find a reaction that may elimiate that reactatn
+    // 3. Caculate the multiplier such that that reactant is elminated in LHS, it's ok to create excess in RHS
+
+    // RHS, excess product
+    let mut excess_products: HashMap<String, usize> = HashMap::new();
+
     loop {
         let mut current_reaction = reaction.clone();
         let reactants = current_reaction.reactants.clone();
         if reactants.len() == 1 && reactants[0].1 == "ORE" {
+            println!("Answer part 1 {:?}", reactants[0].0);
             break;
         }
-        println!("---------------");
-        println!("current_reaction: {:?}", current_reaction);
+        // println!("---------------");
+        // println!("current_reaction {:?}" , current_reaction);
         let reactant_to_eliminate = reactants.iter().find(|r| r.1 != "ORE").unwrap();
         let other_reaction_index = *reaction_by_product.get(&reactant_to_eliminate.1).unwrap();
         let mut other_reaction = reactions[other_reaction_index].clone();
         // "multiply" phase
         {
-            let lcm = get_lcm(other_reaction.product.0, reactant_to_eliminate.0);
-            let current_reaction_multiplier = lcm / reactant_to_eliminate.0;
-            let other_reaction_multiplier = lcm / other_reaction.product.0;
-            current_reaction.product.0 *= current_reaction_multiplier;
-            for reactant in current_reaction.reactants.iter_mut() {
-                reactant.0 *= current_reaction_multiplier;
-            }
+            let count = reactant_to_eliminate.0
+                - excess_products.get(&reactant_to_eliminate.1).unwrap_or(&0);
+            let other_reaction_multiplier =
+                (count as f64 / other_reaction.product.0 as f64).ceil() as usize;
 
             other_reaction.product.0 *= other_reaction_multiplier;
             for reactant in other_reaction.reactants.iter_mut() {
                 reactant.0 *= other_reaction_multiplier;
             }
         }
-        println!("current_reaction: {:?}", current_reaction);
-        println!("other_reaction: {:?}", other_reaction);
+        // println!("current_reaction: {:?}", current_reaction);
+        // println!("other_reaction: {:?}", other_reaction);
 
         // "add" phase
         let mut new_reaction = Reaction {
@@ -147,27 +153,40 @@ pub fn main() {
                 let counter = new_reactants.entry(reactant_name).or_insert(0);
                 *counter += reactant.0;
             }
+            println!("excess_products {:?}", excess_products);
+            // Remove excess if they are present in new_reaction's reactant
+            for (name, value) in excess_products.iter_mut() {
+                let substance_in_new_reaction = new_reactants.get_mut(name);
+                if substance_in_new_reaction.is_some() {
+                    let sub = substance_in_new_reaction.unwrap();
+                    if sub > value {
+                        *sub -= *value;
+                        *value = 0;
+                    } else {
+                        *value -= *sub;
+                        *sub = 0;
+                    }
+                }
+            }
 
             for (key, val) in new_reactants.iter() {
-                new_reaction.reactants.push((*val, key.clone()));
+                if *val > 0 {
+                    new_reaction.reactants.push((*val, key.clone()));
+                }
             }
         }
-        println!("new_reaction: {:?}", new_reaction);
-
-        // "divide" phase
         {
-            let mut gcd = new_reaction.product.0;
-            for reactant in new_reaction.reactants.clone() {
-                gcd = get_gcd(gcd, reactant.0);
-            }
-
-            println!("gcd {:?}", gcd);
-            new_reaction.product.0 /= gcd;
-            for reactant in new_reaction.reactants.iter_mut() {
-                reactant.0 /= gcd;
+            // Insert reactant_to_eliminate in excess_products if applicable
+            let excess_count = other_reaction.product.0
+                - excess_products.get(&reactant_to_eliminate.1).unwrap_or(&0)
+                - reactant_to_eliminate.0;
+            // println!("excess_count {:?}", excess_count);
+            if excess_count > 0 {
+                excess_products.insert(other_reaction.product.1, excess_count);
             }
         }
-        println!("new_reaction: {:?}", new_reaction);
+        // println!("new_reaction: {:?}", new_reaction);
+        // println!("excess_products final {:?}", excess_products);
 
         reaction = new_reaction.clone();
     }
