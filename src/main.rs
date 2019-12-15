@@ -1,4 +1,4 @@
-mod day14;
+mod day15;
 mod utils;
 mod program;
 // #[macro_use] extern crate lazy_static;
@@ -7,5 +7,5 @@ extern crate regex;
 
 
 fn main() {
-    day14::main();
+    day15::main();
 }
