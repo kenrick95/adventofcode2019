@@ -63,8 +63,44 @@ pub fn main() {
     }
     println!("reactions {:?}", reactions);
 
+    let answer_pt1 = calculcate_ore(&reactions, &reaction_by_product, 1);
+    println!("Answer part 1: {:?}", answer_pt1);
+
+    let target_ore: usize = 1_000_000_000_000;
+    // 1m = 122 046 265 285
+    // 10m = 1 220 462 593 399
+    let mut left = 1;
+    let mut right = 10_000_000;
+    while left < right {
+        let i = (left + right) / 2;
+
+        let ore_usage = calculcate_ore(&reactions, &reaction_by_product, i);
+        println!("ore_usage: {:?} {:?} {:?} --> {:?}", left, right, i, ore_usage);
+
+        if ore_usage < target_ore {
+            left = i + 1;
+        } else {
+            right = i;
+        }
+    }
+    println!("Answer part 2: {:?}", left - 1);
+
+}
+
+fn calculcate_ore(
+    reactions: &Vec<Reaction>,
+    reaction_by_product: &HashMap<String, usize>,
+    multiplier: usize,
+) -> usize {
     let reaction_index = *reaction_by_product.get("FUEL").unwrap();
     let mut reaction = reactions[reaction_index].clone();
+
+    {
+        reaction.product.0 *= multiplier;
+        for reactant in reaction.reactants.iter_mut() {
+            reactant.0 *= multiplier;
+        }
+    }
 
     // To generate 1 FUEL, how many ORE is needed?
     // Example
@@ -107,8 +143,7 @@ pub fn main() {
         let mut current_reaction = reaction.clone();
         let reactants = current_reaction.reactants.clone();
         if reactants.len() == 1 && reactants[0].1 == "ORE" {
-            println!("Answer part 1 {:?}", reactants[0].0);
-            break;
+            return reactants[0].0;
         }
         // println!("---------------");
         // println!("current_reaction {:?}" , current_reaction);
@@ -153,7 +188,7 @@ pub fn main() {
                 let counter = new_reactants.entry(reactant_name).or_insert(0);
                 *counter += reactant.0;
             }
-            println!("excess_products {:?}", excess_products);
+            // println!("excess_products {:?}", excess_products);
             // Remove excess if they are present in new_reaction's reactant
             for (name, value) in excess_products.iter_mut() {
                 let substance_in_new_reaction = new_reactants.get_mut(name);
