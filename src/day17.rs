@@ -32,9 +32,9 @@ struct Cell {
 
 pub fn main() {
     let positions = super::utils::get_list_of_numbers_from_file::<i128>("./src/day17-real.log");
-    part1(&positions);
+    // part1(&positions);
 
-    // part2(&positions);
+    part2(&positions);
     // positions[0] = 2;
     // Program input is i128
     // main movement routine (max 3 definitions)
@@ -45,6 +45,36 @@ pub fn main() {
     //    'y' or 'n'      // resource intensive, use it only for debug?
 
     // main routine and movement functions may each contain at most 20 characters, not counting the newline.
+}
+
+fn part2(positions: &[i128]) {
+    let mut new_positions = positions.to_owned();
+    new_positions[0] = 2;
+
+    // Computed by hand :imp:
+    let solution = "A,B,B,A,C,A,C,A,C,B\n\
+                    R,6,R,6,R,8,L,10,L,4\n\
+                    R,6,L,10,R,8\n\
+                    L,4,L,12,R,6,L,10\n\
+                    n\n";
+    let mut solution_chars = RefCell::new(solution.chars());
+
+    run_program(
+        new_positions.clone(),
+        0,
+        0,
+        || {
+            let result = (*solution_chars.borrow_mut()).next().unwrap() as i128;
+            // println!("Input: {:?}", result);
+            result
+        },
+        |result: i128| {
+            if result > 255 {
+                println!("Output: {:?}", result);
+            }
+        },
+        |_state| false,
+    );
 }
 
 fn part1(positions: &[i128]) {
@@ -101,7 +131,7 @@ fn part1(positions: &[i128]) {
         |_state| false,
     );
 
-    // print_map(&map.borrow().clone());
+    print_map(&map.borrow().clone());
 
     // Find intersections
     {
@@ -114,7 +144,6 @@ fn part1(positions: &[i128]) {
         println!("Answer part 1: {:?}", answer);
     }
 }
-
 
 fn get_intersections(map: &HashMap<(i128, i128), Cell>) -> Vec<(i128, i128)> {
     let mut result = vec![];
@@ -151,14 +180,22 @@ fn print_map(map: &HashMap<(i128, i128), Cell>) {
     let offset: i128 = 0;
     let term = Term::stdout();
     // println!("{:?}", map);
+    let mut max_x = 0;
+    let mut max_y = 0;
     term.clear_screen();
     for (location, cell) in map.iter() {
         term.move_cursor_to(
             (location.1 + offset) as usize,
             (location.0 + offset) as usize,
         );
+        max_x = std::cmp::max(max_x, location.1);
+        max_y = std::cmp::max(max_y, location.0);
         term.write_str(&get_cell_as_str(cell));
     }
+    term.move_cursor_to((max_x + offset) as usize, (max_y + offset) as usize);
+    term.write_line("");
+    term.write_line(&max_y.to_string());
+    term.write_line(&max_x.to_string());
     // let input = term.read_key().unwrap();
     // thread::sleep(Duration::from_millis(500));
 }
