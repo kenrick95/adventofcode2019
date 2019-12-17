@@ -1,10 +1,8 @@
 use super::program::*;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
-use console::{style, Term};
-use std::thread;
-use std::time::Duration;
+use console::Term;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum CellType {
@@ -32,7 +30,7 @@ struct Cell {
 
 pub fn main() {
     let positions = super::utils::get_list_of_numbers_from_file::<i128>("./src/day17-real.log");
-    // part1(&positions);
+    part1(&positions);
 
     part2(&positions);
     // positions[0] = 2;
@@ -57,17 +55,13 @@ fn part2(positions: &[i128]) {
                     R,6,L,10,R,8\n\
                     L,4,L,12,R,6,L,10\n\
                     n\n";
-    let mut solution_chars = RefCell::new(solution.chars());
+    let solution_chars = RefCell::new(solution.chars());
 
     run_program(
         new_positions.clone(),
         0,
         0,
-        || {
-            let result = (*solution_chars.borrow_mut()).next().unwrap() as i128;
-            // println!("Input: {:?}", result);
-            result
-        },
+        || (*solution_chars.borrow_mut()).next().unwrap() as i128,
         |result: i128| {
             if result > 255 {
                 println!("Output: {:?}", result);
@@ -89,7 +83,7 @@ fn part1(positions: &[i128]) {
         || 0,
         |result: i128| {
             // println!("Output: {:?}", result);
-            let current_location = location.borrow().clone();
+            let current_location = location.borrow();
 
             if result == 10 {
                 // \n
@@ -168,11 +162,11 @@ fn get_intersections(map: &HashMap<(i128, i128), Cell>) -> Vec<(i128, i128)> {
 }
 
 fn get_cell_type(map: &HashMap<(i128, i128), Cell>, location: (i128, i128)) -> CellType {
-    let cell = map.get(&location);
-    if cell.is_none() {
-        CellType::OpenSpace
+    let cell_option = map.get(&location);
+    if let Some(cell) = cell_option {
+        cell.cell_type
     } else {
-        cell.unwrap().cell_type
+        CellType::OpenSpace
     }
 }
 
@@ -197,7 +191,6 @@ fn print_map(map: &HashMap<(i128, i128), Cell>) {
     term.write_line(&max_y.to_string());
     term.write_line(&max_x.to_string());
     // let input = term.read_key().unwrap();
-    // thread::sleep(Duration::from_millis(500));
 }
 
 fn get_cell_as_str(cell: &Cell) -> String {
