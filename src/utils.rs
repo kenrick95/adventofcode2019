@@ -50,6 +50,13 @@ pub fn get_strings_from_file(path: &str) -> Vec<String> {
     let inputs: Vec<String> = all_inputs.split('\n').map(|x| x.to_string()).collect();
     return inputs;
 }
+pub fn get_strings_from_file_no_trim(path: &str) -> Vec<String> {
+    let all_inputs = fs::read_to_string(path)
+        .expect("Unable to read file")
+        .to_string();
+    let inputs: Vec<String> = all_inputs.split('\n').map(|x| x.to_string()).collect();
+    return inputs;
+}
 
 pub fn get_list_of_numbers_from_file<T: FromStr>(path: &str) -> Vec<T>
 where
